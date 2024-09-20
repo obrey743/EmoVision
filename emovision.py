@@ -1,8 +1,8 @@
-############################
-#  *Project: EmoVison       #
-#  * By: Obrey Muchena      #
-#  * Date: 19 Sep 2024      #
-############################
+##############################################################################################
+#                                * Project: EmoVision *                                      #
+#                                * By: Obrey Muchena  *                                      #
+#                                * Date: 19 Sep 2024  *                                      #
+##############################################################################################
 
 import cv2  # Import OpenCV library for computer vision tasks
 from fer import FER  # Import FER (Facial Emotion Recognition) for detecting emotions
