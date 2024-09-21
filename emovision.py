@@ -1,5 +1,5 @@
 ############################
-#  *Project: EmoVison       #
+#  *Project: EmoVision       #
 #  * By: Obrey Muchena      #
 #  * Date: 19 Sep 2024      #
 ############################
