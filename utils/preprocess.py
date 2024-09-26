@@ -5,14 +5,15 @@ import cv2
 
 def preprocess_image(image_path):
     # Load the image
-    image = cv2.imread(image_path)
-    # Resize and convert to grayscale (adjust size based on your model's input requirement)
-    image = cv2.resize(image, (48, 48))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)  # Load directly as grayscale
+    
+    # Resize the image to the desired shape
+    resized_image = cv2.resize(image, (48, 48))
+    
     # Normalize pixel values to range [0, 1]
-    image = image / 255.0
-    # Expand dimensions to match model input (batch size, height, width, channels)
-    image = tf.expand_dims(image, axis=-1)  # Add channel dimension (grayscale)
-    image = tf.expand_dims(image, axis=0)   # Add batch dimension
-    return image
-
+    normalized_image = resized_image.astype('float32') / 255.0
+    
+    # Expand dimensions to add batch size and channel (required for grayscale images)
+    input_image = normalized_image[np.newaxis, ..., np.newaxis]
+    
+    return tf.convert_to_tensor(input_image)  # Convert to TensorFlow tensor
