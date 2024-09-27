@@ -1,23 +1,25 @@
 import unittest
-from models.emotion_detector import EmotionDetector
 import numpy as np
+from models.emotion_detector import EmotionDetector
 
-class TestEmotionDetector(unittest.TestCase):
-    def setUp(self):
-        # Initialize EmotionDetector with a valid model path
-        self.detector = EmotionDetector('models/emotion_model.keras')
+class EmotionDetectorTestCase(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        # Load the EmotionDetector model
+        cls.detector = EmotionDetector('models/emotion_model.keras')
 
-    def test_predict_emotion(self):
-        # Create a dummy 48x48 grayscale image
-        dummy_image = np.random.rand(48, 48, 1).astype('float32')
-        dummy_image = np.expand_dims(dummy_image, axis=0)
+    def test_emotion_prediction(self):
+        # Generate a random 48x48 grayscale image
+        test_image = np.random.rand(48, 48, 1).astype(np.float32)
+        test_image = np.expand_dims(test_image, axis=0)
         
-        # Run prediction
-        emotion = self.detector.predict_emotion(dummy_image)
+        # Predict emotion
+        predicted_emotion = self.detector.predict_emotion(test_image)
         
-        # Check if output is a string representing an emotion
-        self.assertIsInstance(emotion, str)
-        self.assertIn(emotion, ['Angry', 'Happy', 'Sad', 'Surprised', 'Neutral'])
+        # Validate the prediction output
+        self.assertIsInstance(predicted_emotion, str)
+        self.assertIn(predicted_emotion, ['Angry', 'Happy', 'Sad', 'Surprised', 'Neutral'])
 
 if __name__ == '__main__':
     unittest.main()
