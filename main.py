@@ -3,18 +3,24 @@
 from models.emotion_detector import EmotionDetector
 from utils.preprocess import preprocess_image
 
-def main():
-    # Initialize the Emotion Detector with the correct path to the model file
-    detector = EmotionDetector('models/emotion_model.keras')
+def load_emotion_detector(model_path):
+    """Initialize the Emotion Detector with the given model path."""
+    return EmotionDetector(model_path)
 
-    # Path to the test image (ensure you have an image in the assets folder)
-    image_path = 'assets/test_image.jpg'  # Change the path to your actual image
-
-    # Preprocess the image
+def predict_emotion_from_image(detector, image_path):
+    """Preprocess the image and predict the emotion using the detector."""
     preprocessed_image = preprocess_image(image_path)
+    return detector.predict_emotion(preprocessed_image)
+
+def main():
+    model_path = 'models/emotion_model.keras'  # Path to the model file
+    image_path = 'assets/test_image.jpg'  # Path to the test image
+
+    # Initialize the Emotion Detector
+    detector = load_emotion_detector(model_path)
 
     # Predict the emotion
-    emotion = detector.predict_emotion(preprocessed_image)
+    emotion = predict_emotion_from_image(detector, image_path)
 
     # Print the detected emotion
     print(f"Predicted Emotion: {emotion}")
