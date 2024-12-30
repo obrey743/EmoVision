@@ -1,5 +1,5 @@
 ############################
-#  *Project: EmoVison       #
+#  *Project: EmoVision      #
 #  * By: Obrey Muchena      #
 #  * Date: 19 Sep 2024      #
 ############################
@@ -12,6 +12,17 @@ cap = cv2.VideoCapture(0)
 
 # Initialize the FER detector with MTCNN (Multi-task Cascaded Convolutional Neural Networks) for better face detection
 detector = FER(mtcnn=True)
+
+# Define a dictionary of colors for different emotions
+emotion_colors = {
+    "angry": (0, 0, 255),      # Red
+    "disgust": (0, 128, 0),    # Green
+    "fear": (128, 0, 128),     # Purple
+    "happy": (255, 255, 0),    # Yellow
+    "sad": (0, 0, 128),        # Dark Blue
+    "surprise": (0, 255, 255), # Cyan
+    "neutral": (255, 255, 255) # White
+}
 
 # Start an infinite loop to continuously capture frames from the webcam
 while True:
@@ -31,12 +42,22 @@ while True:
         # Get the emotion with the highest score (most likely emotion)
         emotion, score = max(face['emotions'].items(), key=lambda x: x[1])
         
+        # Choose a color based on the detected emotion
+        color = emotion_colors.get(emotion, (255, 255, 255))  # Default to white if emotion not found
+        
         # Draw a rectangle around the detected face
-        cv2.rectangle(frame, (box[0], box[1]), (box[0]+box[2], box[1]+box[3]), (0, 255, 0), 2)
+        cv2.rectangle(frame, (box[0], box[1]), (box[0]+box[2], box[1]+box[3]), color, 2)
         
         # Display the detected emotion and its score above the rectangle
         cv2.putText(frame, f"{emotion} ({score:.2f})", (box[0], box[1] - 10), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (36, 255, 12), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+        
+        # Display all emotions with their respective scores below the rectangle
+        y_offset = box[1] + box[3] + 20
+        for em, sc in face['emotions'].items():
+            cv2.putText(frame, f"{em}: {sc:.2f}", (box[0], y_offset), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, emotion_colors.get(em, (255, 255, 255)), 1)
+            y_offset += 20
     
     # Show the frame with the detected faces and emotions in a window titled 'EmoVision'
     cv2.imshow('EmoVision', frame)
