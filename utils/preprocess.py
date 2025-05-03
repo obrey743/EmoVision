@@ -30,5 +30,5 @@ def preprocess_image(image_path, target_size=(48, 48)):
     # Reshape to add batch and channel dimensions (batch_size=1, channels=1)
     image_processed = image_normalized[np.newaxis, ..., np.newaxis]
     
-    # Convert to TensorFlow tensor
+    # Convert all to TensorFlow tensor
     return tf.convert_to_tensor(image_processed, dtype=tf.float32)
