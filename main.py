@@ -1,12 +1,15 @@
 ############################
 #  * Project: EmoVision    #
 #  * By: Obrey Muchena     #
-#  * Date: 19 Sep 2024     #
+#  * Updated: 5 May 2025   #
 ############################
 
 import cv2
 import time
 import datetime
+import csv
+import os
+from collections import deque
 from fer import FER
 
 
@@ -37,11 +40,30 @@ def get_emotion_color(emotion):
     return emotion_colors.get(emotion, (255, 255, 255))
 
 
-def save_screenshot(frame):
+def save_screenshot(frame, label=""):
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"emotion_capture_{timestamp}.png"
+    filename = f"emotion_capture_{label}_{timestamp}.png" if label else f"emotion_capture_{timestamp}.png"
     cv2.imwrite(filename, frame)
     print(f"Screenshot saved as '{filename}'")
+
+
+def log_emotion_data(emotions):
+    if not emotions:
+        return
+
+    os.makedirs("logs", exist_ok=True)
+    log_file = os.path.join("logs", "emotion_log.csv")
+    file_exists = os.path.isfile(log_file)
+
+    with open(log_file, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if not file_exists:
+            writer.writerow(["Timestamp", "Face#", "Emotion", "Score"])
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        for idx, face in enumerate(emotions):
+            for emotion, score in face['emotions'].items():
+                writer.writerow([timestamp, idx + 1, emotion, f"{score:.2f}"])
 
 
 def draw_emotion_data(frame, emotions):
@@ -60,12 +82,17 @@ def draw_emotion_data(frame, emotions):
         cv2.rectangle(frame, (x, y - th - 10), (x + tw, y), color, -1)
         cv2.putText(frame, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
 
-        # Display all emotion scores
+        # Display emotion probabilities
         y_offset = y + h + 20
         for em, sc in face['emotions'].items():
             cv2.putText(frame, f"{em}: {sc:.2f}", (x, y_offset),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, get_emotion_color(em), 1)
             y_offset += 20
+
+
+def display_overlay(frame):
+    overlay_text = "Press 'q' to quit | 's' to save | Auto-snap on 'happy'"
+    cv2.putText(frame, overlay_text, (10, 470), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150, 150, 150), 1)
 
 
 def main():
@@ -75,6 +102,7 @@ def main():
 
         frame_count = 0
         start_time = time.time()
+        fps_queue = deque(maxlen=10)
 
         print("Press 'q' to quit, 's' to save a screenshot")
 
@@ -88,12 +116,26 @@ def main():
             emotions = detector.detect_emotions(frame)
 
             draw_emotion_data(frame, emotions)
+            display_overlay(frame)
 
-            # Calculate and display FPS
+            # Face count display
+            cv2.putText(frame, f"Faces: {len(emotions)}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 200, 200), 2)
+
+            # Log emotion data
+            log_emotion_data(emotions)
+
+            # Auto-screenshot if dominant emotion is 'happy'
+            for face in emotions:
+                dominant_emotion, confidence = max(face['emotions'].items(), key=lambda x: x[1])
+                if dominant_emotion == 'happy' and confidence > 0.9:
+                    save_screenshot(frame, "happy")
+
+            # FPS calculation (moving average)
             frame_count += 1
-            elapsed_time = time.time() - start_time
-            fps = frame_count / elapsed_time
-            cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30),
+            fps = frame_count / (time.time() - start_time)
+            fps_queue.append(fps)
+            avg_fps = sum(fps_queue) / len(fps_queue)
+            cv2.putText(frame, f"FPS: {avg_fps:.2f}", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             cv2.imshow('EmoVision', frame)
