@@ -16,7 +16,7 @@ from fer import FER
 def initialize_camera(camera_index=0):
     cap = cv2.VideoCapture(camera_index)
     if not cap.isOpened():
-        raise RuntimeError("Error: Could not access webcam")
+        raise RuntimeError("Error: Could not access your webcam")
     return cap
 
 
