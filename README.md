@@ -25,22 +25,53 @@ pip install -r requirements.txt
 #    If you hit issues with numpy/opencv on Python 3.12+,
 #    switch to Python 3.10 as above.
 
-# 5) Collect a small dataset with your webcam
-python -m emovision.data.collector --out data/dataset --classes Angry Happy Neutral Sad Surprise --per-class 150
+# 5) Install the package (makes `python -m emovision...` and the CLI scripts work)
+pip install -e ".[dev]"
 
-# 6) Train the baseline model
-python -m emovision.train --data data/dataset --epochs 15
+# 6) Collect a small dataset with your webcam
+python main.py collect --classes Angry Happy Neutral Sad Surprise --per-class 150
 
-# 7) Run live inference
-python -m emovision.infer --model models/emotion_model.keras
+# 7) Train the baseline model (saves model, labels and training curves to models/)
+python main.py train --epochs 30
+
+# 8) Run live inference (or on a single image with --image photo.jpg)
+python main.py infer
+```
+
+### Controls
+
+| Stage   | Keys |
+|---------|------|
+| collect | `space` capture one · `a` toggle auto-capture · `n`/`p` next/previous class · `q` quit |
+| infer   | `b` toggle probability bars · `q` quit |
+
+Every stage accepts `-h` for its options, e.g. `python main.py train -h`. After `pip install -e .` the same
+stages are also available as `emovision-collect`, `emovision-train` and `emovision-infer`.
+
+### What each stage does
+
+- **collect** – detects the largest face, crops it with a small margin, saves a 48×48 grayscale PNG per class.
+- **train** – stratified train/val split, on-the-fly augmentation, class-balanced loss, early stopping and LR
+  scheduling. Writes `models/emotion_model.keras`, `emotion_model.keras.labels.json` (class order) and
+  `emotion_model_history.png`, and prints a per-class report and confusion matrix.
+- **infer** – multi-face prediction with per-face temporal smoothing (`--smooth`), an "Uncertain" label below
+  `--min-conf`, probability bars and an FPS counter.
+
+### Tests
+
+```bash
+pytest
 ```
 
 ## 1) Project Layout
 
 ```
-EmoVision-Starter/
+EmoVision/
 ├─ README.md
+├─ main.py               # python main.py {collect,train,infer}
+├─ pyproject.toml
 ├─ requirements.txt
+├─ tests/
 ├─ src/
 │  └─ emovision/
 │     ├─ __init__.py
@@ -51,12 +82,12 @@ EmoVision-Starter/
 │        └─ collector.py
 │     └─ utils/
 │        ├─ dataset.py
+│        ├─ face.py
 │        └─ preprocess.py
 ├─ data/
 │  ├─ raw/
 │  └─ dataset/           # auto-created by collector.py
-├─ models/               # trained models saved here
-└─ notebooks/
+└─ models/               # trained models saved here
 ```
 
 ## 2) Notes on macOS & Numpy/OpenCV Errors
